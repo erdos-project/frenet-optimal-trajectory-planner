@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_CXX_FLAGS "-march=native -O3 -pthread -Wall")
+set(CMAKE_CXX_FLAGS "-march=native -O3 -pthread -Wall -DQT_NO_VERSION_TAGGING")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 
@@ -35,7 +35,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src"
                     "${CMAKE_SOURCE_DIR}/src/Car")
 
 add_library(FrenetOptimalTrajectory SHARED
-            src/main.cpp
+            # src/main.cpp
             src/utils.h
             src/Polynomials/QuarticPolynomial.cpp
             src/Polynomials/QuarticPolynomial.h
@@ -47,6 +47,8 @@ add_library(FrenetOptimalTrajectory SHARED
             src/CubicSpline/CubicSpline2D.h
             src/FrenetOptimalTrajectory/FrenetOptimalTrajectory.cpp
             src/FrenetOptimalTrajectory/FrenetOptimalTrajectory.h
+            src/FrenetOptimalTrajectory/AnytimeFrenetOptimalTrajectory.cpp
+            src/FrenetOptimalTrajectory/AnytimeFrenetOptimalTrajectory.h
             src/FrenetOptimalTrajectory/FrenetPath.cpp
             src/FrenetOptimalTrajectory/FrenetPath.h
             src/FrenetOptimalTrajectory/fot_wrapper.cpp
@@ -55,6 +57,55 @@ add_library(FrenetOptimalTrajectory SHARED
             src/Obstacle/Obstacle.h
             src/Car/Car.cpp
             src/Car/Car.h)
+
+add_library(PackageFrenetOptimalTrajectory STATIC
+            # src/main.cpp
+            src/utils.h
+            src/Polynomials/QuarticPolynomial.cpp
+            src/Polynomials/QuarticPolynomial.h
+            src/Polynomials/QuinticPolynomial.cpp
+            src/Polynomials/QuinticPolynomial.h
+            src/CubicSpline/CubicSpline1D.cpp
+            src/CubicSpline/CubicSpline1D.h
+            src/CubicSpline/CubicSpline2D.cpp
+            src/CubicSpline/CubicSpline2D.h
+            src/FrenetOptimalTrajectory/FrenetOptimalTrajectory.cpp
+            src/FrenetOptimalTrajectory/FrenetOptimalTrajectory.h
+            src/FrenetOptimalTrajectory/AnytimeFrenetOptimalTrajectory.cpp
+            src/FrenetOptimalTrajectory/AnytimeFrenetOptimalTrajectory.h
+            src/FrenetOptimalTrajectory/FrenetPath.cpp
+            src/FrenetOptimalTrajectory/FrenetPath.h
+            src/FrenetOptimalTrajectory/fot_wrapper.cpp
+            src/FrenetOptimalTrajectory/py_cpp_struct.h
+            src/Obstacle/Obstacle.cpp
+            src/Obstacle/Obstacle.h
+            src/Car/Car.cpp
+            src/Car/Car.h)
+
+add_executable(AnytimeFrenetOptimalTrajectoryTest
+            src/anytime.cpp
+            src/utils.h
+            src/Polynomials/QuarticPolynomial.cpp
+            src/Polynomials/QuarticPolynomial.h
+            src/Polynomials/QuinticPolynomial.cpp
+            src/Polynomials/QuinticPolynomial.h
+            src/CubicSpline/CubicSpline1D.cpp
+            src/CubicSpline/CubicSpline1D.h
+            src/CubicSpline/CubicSpline2D.cpp
+            src/CubicSpline/CubicSpline2D.h
+            src/FrenetOptimalTrajectory/FrenetOptimalTrajectory.cpp
+            src/FrenetOptimalTrajectory/FrenetOptimalTrajectory.h
+            src/FrenetOptimalTrajectory/AnytimeFrenetOptimalTrajectory.cpp
+            src/FrenetOptimalTrajectory/AnytimeFrenetOptimalTrajectory.h
+            src/FrenetOptimalTrajectory/FrenetPath.cpp
+            src/FrenetOptimalTrajectory/FrenetPath.h
+            src/FrenetOptimalTrajectory/fot_wrapper.cpp
+            src/FrenetOptimalTrajectory/py_cpp_struct.h
+            src/Obstacle/Obstacle.cpp
+            src/Obstacle/Obstacle.h
+            src/Car/Car.cpp
+            src/Car/Car.h)
+
 add_executable(FrenetOptimalTrajectoryTest
                src/main.cpp
                src/utils.h
@@ -77,4 +128,6 @@ add_executable(FrenetOptimalTrajectoryTest
                src/Car/Car.cpp
                src/Car/Car.h)
 target_link_libraries(FrenetOptimalTrajectory Eigen3::Eigen Qt5::Widgets Qt5::Gui)
+target_link_libraries(PackageFrenetOptimalTrajectory Eigen3::Eigen Qt5::Widgets Qt5::Gui)
 target_link_libraries(FrenetOptimalTrajectoryTest Eigen3::Eigen Qt5::Widgets Qt5::Gui)
+target_link_libraries(AnytimeFrenetOptimalTrajectoryTest Eigen3::Eigen Qt5::Widgets Qt5::Gui)

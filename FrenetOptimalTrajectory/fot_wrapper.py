@@ -39,13 +39,12 @@ _to_frenet_initial_conditions.argtypes = (c_double, c_double, c_double,
 
 
 def _parse_hyperparameters(hp):
-    return FrenetHyperparameters(hp["max_speed"], hp["max_accel"],
-                                 hp["max_curvature"], hp["max_road_width_l"],
-                                 hp["max_road_width_r"], hp["d_road_w"],
-                                 hp["dt"], hp["maxt"], hp["mint"], hp["d_t_s"],
-                                 hp["n_s_sample"], hp["obstacle_clearance"],
-                                 hp["kd"], hp["kv"], hp["ka"], hp["kj"],
-                                 hp["kt"], hp["ko"], hp["klat"], hp["klon"], hp["num_threads"])
+    return FrenetHyperparameters(
+        hp["max_speed"], hp["max_accel"], hp["max_curvature"],
+        hp["max_road_width_l"], hp["max_road_width_r"], hp["d_road_w"],
+        hp["dt"], hp["maxt"], hp["mint"], hp["d_t_s"], hp["n_s_sample"],
+        hp["obstacle_clearance"], hp["kd"], hp["kv"], hp["ka"], hp["kj"],
+        hp["kt"], hp["ko"], hp["klat"], hp["klon"], hp["num_threads"])
 
 
 def run_fot(initial_conditions, hyperparameters):
@@ -219,3 +218,60 @@ def to_frenet_initial_conditions(initial_conditions):
         o_ury.ctypes.data_as(_c_double_p),  # obstacles upper right y
         len(o_llx),
     ), misc
+
+
+#############################################################
+# For Anytime Planner Implementation
+#############################################################
+def query_anytime_planner_path(fot_planner, return_rv_object=False):
+    # return value should be separate for each path
+    fot_rv = FrenetReturnValues(0)
+    fot_planner.get_path(fot_rv)
+
+    x_path = np.array([fot_rv.x_path[i] for i in range(MAX_PATH_LENGTH)])
+    y_path = np.array([fot_rv.y_path[i] for i in range(MAX_PATH_LENGTH)])
+    speeds = np.array([fot_rv.speeds[i] for i in range(MAX_PATH_LENGTH)])
+    ix = np.array([fot_rv.ix[i] for i in range(MAX_PATH_LENGTH)])
+    iy = np.array([fot_rv.iy[i] for i in range(MAX_PATH_LENGTH)])
+    iyaw = np.array([fot_rv.iyaw[i] for i in range(MAX_PATH_LENGTH)])
+    d = np.array([fot_rv.d[i] for i in range(MAX_PATH_LENGTH)])
+    s = np.array([fot_rv.s[i] for i in range(MAX_PATH_LENGTH)])
+    speeds_x = np.array([fot_rv.speeds_x[i] for i in range(MAX_PATH_LENGTH)])
+    speeds_y = np.array([fot_rv.speeds_y[i] for i in range(MAX_PATH_LENGTH)])
+    params = {
+        "s": fot_rv.params[0],
+        "s_d": fot_rv.params[1],
+        "d": fot_rv.params[2],
+        "d_d": fot_rv.params[3],
+        "d_dd": fot_rv.params[4],
+    }
+    costs = {
+        "c_lateral_deviation": fot_rv.costs[0],
+        "c_lateral_velocity": fot_rv.costs[1],
+        "c_lateral_acceleration": fot_rv.costs[2],
+        "c_lateral_jerk": fot_rv.costs[3],
+        "c_lateral": fot_rv.costs[4],
+        "c_longitudinal_acceleration": fot_rv.costs[5],
+        "c_longitudinal_jerk": fot_rv.costs[6],
+        "c_time_taken": fot_rv.costs[7],
+        "c_end_speed_deviation": fot_rv.costs[8],
+        "c_longitudinal": fot_rv.costs[9],
+        "c_inv_dist_to_obstacles": fot_rv.costs[10],
+        "cf": fot_rv.costs[11],
+    }
+
+    success = fot_rv.success
+    # remove values after last calculated waypoint
+    ind = -1
+    if success:
+        ind = np.where(np.isnan(x_path))[0][0]
+
+    if return_rv_object:
+        return x_path[:ind], y_path[:ind], speeds[:ind], \
+            ix[:ind], iy[:ind], iyaw[:ind], d[:ind], s[:ind], \
+            speeds_x[:ind], speeds_y[:ind], params, costs, success, \
+            fot_rv
+    else:
+        return x_path[:ind], y_path[:ind], speeds[:ind], \
+            ix[:ind], iy[:ind], iyaw[:ind], d[:ind], s[:ind], \
+            speeds_x[:ind], speeds_y[:ind], params, costs, success

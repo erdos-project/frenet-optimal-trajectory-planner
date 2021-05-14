@@ -1,12 +1,15 @@
-#include "FrenetOptimalTrajectory.h"
+#include "AnytimeFrenetOptimalTrajectory.h"
 #include "FrenetPath.h"
 #include "py_cpp_struct.h"
 
 #include <iostream>
+#include <assert.h>
+#include <unistd.h>
 
 using namespace std;
 
 int main() {
+
     double wx [25] = {132.67, 128.67, 124.67, 120.67, 116.67, 112.67, 108.67,
                    104.67, 101.43,  97.77,  94.84,  92.89,  92.4 ,  92.4 ,
                    92.4 ,  92.4 ,  92.4 ,  92.4 ,  92.4 ,  92.39,  92.39,
@@ -62,12 +65,40 @@ int main() {
     };
 
     // run experiment
-    FrenetOptimalTrajectory fot = FrenetOptimalTrajectory(&fot_ic, &fot_hp);
-    FrenetPath* best_frenet_path = fot.getBestPath();
-    if (best_frenet_path) {
-        cout << "Success\n";
-        return 1;
+    AnytimeFrenetOptimalTrajectory fot = AnytimeFrenetOptimalTrajectory(&fot_ic, &fot_hp);
+
+    fot.asyncPlan(); // start planning
+
+    const int NUM_ITER = 50;
+    const int TEST_INTERVAL_TIME = 2; // in microseconds
+
+    double prev_final_cf = INFINITY;
+    double curr_cf;
+
+    for (int i = 0; i < NUM_ITER; i ++) {
+        FrenetPath* curr_frenet_path = fot.getBestPath();
+        if (curr_frenet_path) {
+            curr_cf = curr_frenet_path->cf;
+            cout << "Found Valid Path with Cost: " << curr_cf << "\n";
+        } else {
+            curr_cf = INFINITY;
+            cout << "No Valid Path Found\n";
+        }
+
+        // anytime algo consistency test, cost should only reduce or stay unchanged
+        // assert(curr_cf > prev_final_cf);
+        if (prev_final_cf < curr_cf) {
+            cout << "Not Consistent\n";
+            return -1; 
+        }
+
+        prev_final_cf = curr_cf;
+        usleep(TEST_INTERVAL_TIME);
     }
-    cout << "Failure\n";
+
+    cout << "All iterations are consistent\n";
+
+    fot.stopPlanning();
+
     return 0;
 }
